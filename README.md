@@ -4,7 +4,7 @@
 
 A Swift network client generated from the [OpenAI OpenAPI](https://github.com/openai/openai-openapi) definition.
 
-[OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) is a definition language to describe RESTful APIs like the one from OpenAPI. By using a code generator we are able to keep our client updated and [documented](https://janodevorg.github.io/OpenAIAPI/documentation/openaiapi/) with minimal effort. [CreateAPI](https://github.com/CreateAPI/CreateAPI) is one of such generators for the Swift language.
+[OpenAPI](https://en.wikipedia.org/wiki/OpenAPI_Specification) is a definition language to describe RESTful APIs like the one from OpenAPI. By using a code generator the client can be updated and [documented](https://janodevorg.github.io/OpenAIAPI/documentation/openaiapi/) with minimal effort. [CreateAPI](https://github.com/CreateAPI/CreateAPI) is one of such generators for the Swift language.
 
 ## Installation
 
@@ -92,10 +92,11 @@ public extension Request {
 
 ## About swiftlint
 
-I’m linting thanks to the swiftlint SPM plugin. This works for me because if you look at the .github/workflow folder I’m running self-hosted github runner. In case you pay for a CI, the swiftlint checkout will take a very long time. A more involved alternative is using [Swift Package Plugins](https://github.com/CreateAPI/CreateAPI/blob/main/Docs/SwiftPackagePlugins.md).
+I’m using swiftlint as a SPM plugin. As of today (25 March 2023) this is problematic: 
 
-Another issue is that the current release (0.51.0-rc.2) doesn’t contain [this fix](https://github.com/realm/SwiftLint/issues/4722) to honor the excludes directive of `.swiftlint.yml`. This has the unfortunate consequence of marking your package as unstable. That’s why I added a tab 1.0.1 to the same content. Otherwise people won’t be able to link to 1.0.0 unless their package is unstable too.
+- The swiftlint dependency checkout is huge, which wastes time and CPU. I can deal with it because my CI is a [self-hosted runner](https://github.com/janodevorg/OpenAIAPI/blob/main/.github/workflows/swift.yml#L14). An alternative is to generate a project with xcodegen and add a phase that uses a swiftlint installed with brew, or to write a plugin that uses a swiftlint binary ([like this](https://github.com/CreateAPI/CreateAPI/blob/main/Docs/SwiftPackagePlugins.md)).
 
+- The current release (0.51.0-rc.2) ignores the `excludes` directive. This is fixed in main (see [issue #4722](https://github.com/realm/SwiftLint/issues/4722)) but requesting your plugin with `branch: "main"` has the unfortunate consequence of marking your package as unstable, which requires clients to be marked as unstable too (even if I tag OpenAPI as 1.0.1). What a mess. A workaround is to comment the swiftlint plugin in Package.swift, then uncommented in local, and ignore changes to the package (`git update-index --skip-worktree Package.swift`). This lets me lint locally without consequences for clients.
 
 ## Links of interest
 
