@@ -27,6 +27,13 @@ docc: requirejq
 	@echo "Check https://janodevorg.github.io/OpenAIAPI/documentation/openaiapi/"
 	@echo ""
 
+test:
+	set -o pipefail && xcodebuild test -scheme "OpenAIAPI-Package" -destination "OS=16.2,name=iPhone 14 Pro" -skipPackagePluginValidation | xcpretty
+	set -o pipefail && xcodebuild test -scheme "OpenAIAPI-Package" -destination "platform=macOS,arch=arm64" -skipPackagePluginValidation | xcpretty
+	set -o pipefail && xcodebuild test -scheme "OpenAIAPI-Package" -destination "platform=macOS,arch=arm64,variant=Mac Catalyst" -skipPackagePluginValidation | xcpretty
+	set -o pipefail && xcodebuild test -scheme "OpenAIAPI-Package" -destination "platform=tvOS Simulator,name=Apple TV 4K (3rd generation)" -skipPackagePluginValidation | xcpretty
+	set -o pipefail && xcodebuild test -scheme "OpenAIAPI-Package" -destination "platform=watchOS Simulator,name=Apple Watch Ultra (49mm)" -skipPackagePluginValidation | xcpretty	
+
 createapi: requirebrew
 	@if ! command -v create-api &> /dev/null; then echo "Please install create-api using 'brew install create-api'"; exit 1; fi
 
