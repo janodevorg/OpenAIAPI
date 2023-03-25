@@ -3,7 +3,13 @@ import PackageDescription
 
 let package = Package(
     name: "OpenAIAPI",
-    platforms: [.iOS(.v13), .macCatalyst(.v13), .macOS(.v12)],
+    platforms: [
+        .iOS(.v13), 
+        .macCatalyst(.v13), 
+        .macOS(.v12),
+        .tvOS(.v13),
+        .watchOS(.v6)
+    ],
     products: [
         .library(name: "OpenAIAPI", type: .dynamic, targets: ["OpenAIAPI"]),
         .library(name: "OpenAIAPIStatic", type: .static, targets: ["OpenAIAPI"])
