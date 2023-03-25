@@ -1,0 +1,27 @@
+--- FineTune.swift	2023-03-21 19:13:39
++++ Sources/Generated/Entities/FineTune.swift	2023-03-21 19:15:52
+@@ -12,13 +12,13 @@
+     public var fineTunedModel: String?
+     public var organizationID: String
+     public var status: String
+-    public var hyperparams: [String: AnyJSON]
++    public var hyperparams: UnknownDictionary
+     public var trainingFiles: [OpenAIFile]
+     public var validationFiles: [OpenAIFile]
+     public var resultFiles: [OpenAIFile]
+     public var events: [FineTuneEvent]?
+ 
+-    public init(id: String, object: String, createdAt: Int, updatedAt: Int, model: String, fineTunedModel: String? = nil, organizationID: String, status: String, hyperparams: [String: AnyJSON], trainingFiles: [OpenAIFile], validationFiles: [OpenAIFile], resultFiles: [OpenAIFile], events: [FineTuneEvent]? = nil) {
++    public init(id: String, object: String, createdAt: Int, updatedAt: Int, model: String, fineTunedModel: String? = nil, organizationID: String, status: String, hyperparams: UnknownDictionary, trainingFiles: [OpenAIFile], validationFiles: [OpenAIFile], resultFiles: [OpenAIFile], events: [FineTuneEvent]? = nil) {
+         self.id = id
+         self.object = object
+         self.createdAt = createdAt
+@@ -44,7 +44,7 @@
+         self.fineTunedModel = try values.decodeIfPresent(String.self, forKey: "fine_tuned_model")
+         self.organizationID = try values.decode(String.self, forKey: "organization_id")
+         self.status = try values.decode(String.self, forKey: "status")
+-        self.hyperparams = try values.decode([String: AnyJSON].self, forKey: "hyperparams")
++        self.hyperparams = try values.decode(UnknownDictionary.self, forKey: "hyperparams")
+         self.trainingFiles = try values.decode([OpenAIFile].self, forKey: "training_files")
+         self.validationFiles = try values.decode([OpenAIFile].self, forKey: "validation_files")
+         self.resultFiles = try values.decode([OpenAIFile].self, forKey: "result_files")
