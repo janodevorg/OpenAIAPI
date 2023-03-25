@@ -11,8 +11,8 @@ let package = Package(
         .watchOS(.v6)
     ],
     products: [
-        .library(name: "OpenAIAPI", type: .dynamic, targets: ["OpenAIAPI"]),
-        .library(name: "OpenAIAPIStatic", type: .static, targets: ["OpenAIAPI"])
+        .library(name: "OpenAIAPI", type: .static, targets: ["OpenAIAPI"]),
+        .library(name: "OpenAIAPIDynamic", type: .dynamic, targets: ["OpenAIAPI"])
     ],
     dependencies: [
         .package(url: "git@github.com:kean/Get.git", from: "1.0.2"),
