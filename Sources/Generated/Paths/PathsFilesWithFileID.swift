@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths.Files {
@@ -16,12 +17,12 @@ extension Paths.Files {
 
         /// Returns information about a specific file.
         public var get: Request<OpenAIAPI.OpenAIFile> {
-            Request(method: "GET", url: path, id: "retrieveFile")
+            Request(path: path, method: "GET", id: "retrieveFile")
         }
 
         /// Delete a file.
         public var delete: Request<OpenAIAPI.DeleteFileResponse> {
-            Request(method: "DELETE", url: path, id: "deleteFile")
+            Request(path: path, method: "DELETE", id: "deleteFile")
         }
     }
 }

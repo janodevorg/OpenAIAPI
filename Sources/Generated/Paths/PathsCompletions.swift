@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {
@@ -14,9 +15,9 @@ extension Paths {
         /// Path: `/completions`
         public let path: String
 
-        /// Creates a completion for the provided prompt and parameters
+        /// Creates a completion for the provided prompt and parameters.
         public func post(_ body: OpenAIAPI.CreateCompletionRequest) -> Request<OpenAIAPI.CreateCompletionResponse> {
-            Request(method: "POST", url: path, body: body, id: "createCompletion")
+            Request(path: path, method: "POST", body: body, id: "createCompletion")
         }
     }
 }

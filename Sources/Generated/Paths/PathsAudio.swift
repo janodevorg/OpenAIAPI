@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {

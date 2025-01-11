@@ -4,17 +4,21 @@
 import Foundation
 
 public struct ListModelsResponse: Codable {
-    public var object: String
+    public var object: Object
     public var data: [Model]
 
-    public init(object: String, data: [Model]) {
+    public enum Object: String, Codable, CaseIterable {
+        case list
+    }
+
+    public init(object: Object, data: [Model]) {
         self.object = object
         self.data = data
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.object = try values.decode(String.self, forKey: "object")
+        self.object = try values.decode(Object.self, forKey: "object")
         self.data = try values.decode([Model].self, forKey: "data")
     }
 

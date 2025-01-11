@@ -4,23 +4,39 @@
 import Foundation
 
 public struct ListFilesResponse: Codable {
+    /// Example: "list"
     public var object: String
     public var data: [OpenAIFile]
+    /// Example: "file-abc123"
+    public var firstID: String
+    /// Example: "file-abc456"
+    public var lastID: String
+    /// Example: false
+    public var hasMore: Bool
 
-    public init(object: String, data: [OpenAIFile]) {
+    public init(object: String, data: [OpenAIFile], firstID: String, lastID: String, hasMore: Bool) {
         self.object = object
         self.data = data
+        self.firstID = firstID
+        self.lastID = lastID
+        self.hasMore = hasMore
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.object = try values.decode(String.self, forKey: "object")
         self.data = try values.decode([OpenAIFile].self, forKey: "data")
+        self.firstID = try values.decode(String.self, forKey: "first_id")
+        self.lastID = try values.decode(String.self, forKey: "last_id")
+        self.hasMore = try values.decode(Bool.self, forKey: "has_more")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(object, forKey: "object")
         try values.encode(data, forKey: "data")
+        try values.encode(firstID, forKey: "first_id")
+        try values.encode(lastID, forKey: "last_id")
+        try values.encode(hasMore, forKey: "has_more")
     }
 }

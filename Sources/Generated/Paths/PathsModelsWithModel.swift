@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths.Models {
@@ -16,12 +17,12 @@ extension Paths.Models {
 
         /// Retrieves a model instance, providing basic information about the model such as the owner and permissioning.
         public var get: Request<OpenAIAPI.Model> {
-            Request(method: "GET", url: path, id: "retrieveModel")
+            Request(path: path, method: "GET", id: "retrieveModel")
         }
 
-        /// Delete a fine-tuned model. You must have the Owner role in your organization.
+        /// Delete a fine-tuned model. You must have the Owner role in your organization to delete a model.
         public var delete: Request<OpenAIAPI.DeleteModelResponse> {
-            Request(method: "DELETE", url: path, id: "deleteModel")
+            Request(path: path, method: "DELETE", id: "deleteModel")
         }
     }
 }

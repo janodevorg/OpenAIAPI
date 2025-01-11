@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths.Audio {
@@ -14,9 +15,28 @@ extension Paths.Audio {
         /// Path: `/audio/translations`
         public let path: String
 
-        /// Translates audio into into English.
-        public func post(_ body: Data) -> Request<OpenAIAPI.CreateTranslationResponse> {
-            Request(method: "POST", url: path, body: body, id: "createTranslation")
+        /// Translates audio into English.
+        public func post(_ body: Data) -> Request<PostResponse> {
+            Request(path: path, method: "POST", body: body, id: "createTranslation")
+        }
+
+        public enum PostResponse: Decodable {
+            case createTranslationResponseJSON(OpenAIAPI.CreateTranslationResponseJSON)
+            case createTranslationResponseVerboseJSON(OpenAIAPI.CreateTranslationResponseVerboseJSON)
+
+            public init(from decoder: Decoder) throws {
+                let container = try decoder.singleValueContainer()
+                if let value = try? container.decode(OpenAIAPI.CreateTranslationResponseJSON.self) {
+                    self = .createTranslationResponseJSON(value)
+                } else if let value = try? container.decode(OpenAIAPI.CreateTranslationResponseVerboseJSON.self) {
+                    self = .createTranslationResponseVerboseJSON(value)
+                } else {
+                    throw DecodingError.dataCorruptedError(
+                        in: container,
+                        debugDescription: "Data could not be decoded as any of the expected types (OpenAIAPI.CreateTranslationResponseJSON, OpenAIAPI.CreateTranslationResponseVerboseJSON)."
+                    )
+                }
+            }
         }
     }
 }

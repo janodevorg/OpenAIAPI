@@ -3,29 +3,64 @@
 
 import Foundation
 
+/// Represents if a given text input is potentially harmful.
 public struct CreateModerationResponse: Codable {
+    /// The unique identifier for the moderation request.
     public var id: String
+    /// The model used to generate the moderation results.
     public var model: String
+    /// A list of moderation objects.
     public var results: [Result]
 
     public struct Result: Codable {
+        /// Whether any of the below categories are flagged.
         public var isFlagged: Bool
+        /// A list of the categories, and whether they are flagged or not.
         public var categories: Categories
+        /// A list of the categories along with their scores as predicted by model.
         public var categoryScores: CategoryScores
+        /// A list of the categories along with the input type(s) that the score applies to.
+        public var categoryAppliedInputTypes: CategoryAppliedInputTypes
 
+        /// A list of the categories, and whether they are flagged or not.
         public struct Categories: Codable {
+            /// Content that expresses, incites, or promotes hate based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste. Hateful content aimed at non-protected groups (e.g., chess players) is harassment.
             public var isHate: Bool
+            /// Hateful content that also includes violence or serious harm towards the targeted group based on race, gender, ethnicity, religion, nationality, sexual orientation, disability status, or caste.
             public var isHateThreatening: Bool
+            /// Content that expresses, incites, or promotes harassing language towards any target.
+            public var isHarassment: Bool
+            /// Harassment content that also includes violence or serious harm towards any target.
+            public var isHarassmentThreatening: Bool
+            /// Content that includes instructions or advice that facilitate the planning or execution of wrongdoing, or that gives advice or instruction on how to commit illicit acts. For example, "how to shoplift" would fit this category.
+            public var isIllicit: Bool
+            /// Content that includes instructions or advice that facilitate the planning or execution of wrongdoing that also includes violence, or that gives advice or instruction on the procurement of any weapon.
+            public var isIllicitViolent: Bool
+            /// Content that promotes, encourages, or depicts acts of self-harm, such as suicide, cutting, and eating disorders.
             public var isSelfHarm: Bool
+            /// Content where the speaker expresses that they are engaging or intend to engage in acts of self-harm, such as suicide, cutting, and eating disorders.
+            public var isSelfHarmIntent: Bool
+            /// Content that encourages performing acts of self-harm, such as suicide, cutting, and eating disorders, or that gives instructions or advice on how to commit such acts.
+            public var isSelfHarmInstructions: Bool
+            /// Content meant to arouse sexual excitement, such as the description of sexual activity, or that promotes sexual services (excluding sex education and wellness).
             public var isSexual: Bool
+            /// Sexual content that includes an individual who is under 18 years old.
             public var isSexualMinors: Bool
+            /// Content that depicts death, violence, or physical injury.
             public var isViolence: Bool
+            /// Content that depicts death, violence, or physical injury in graphic detail.
             public var isViolenceGraphic: Bool
 
-            public init(isHate: Bool, isHateThreatening: Bool, isSelfHarm: Bool, isSexual: Bool, isSexualMinors: Bool, isViolence: Bool, isViolenceGraphic: Bool) {
+            public init(isHate: Bool, isHateThreatening: Bool, isHarassment: Bool, isHarassmentThreatening: Bool, isIllicit: Bool, isIllicitViolent: Bool, isSelfHarm: Bool, isSelfHarmIntent: Bool, isSelfHarmInstructions: Bool, isSexual: Bool, isSexualMinors: Bool, isViolence: Bool, isViolenceGraphic: Bool) {
                 self.isHate = isHate
                 self.isHateThreatening = isHateThreatening
+                self.isHarassment = isHarassment
+                self.isHarassmentThreatening = isHarassmentThreatening
+                self.isIllicit = isIllicit
+                self.isIllicitViolent = isIllicitViolent
                 self.isSelfHarm = isSelfHarm
+                self.isSelfHarmIntent = isSelfHarmIntent
+                self.isSelfHarmInstructions = isSelfHarmInstructions
                 self.isSexual = isSexual
                 self.isSexualMinors = isSexualMinors
                 self.isViolence = isViolence
@@ -36,7 +71,13 @@ public struct CreateModerationResponse: Codable {
                 let values = try decoder.container(keyedBy: StringCodingKey.self)
                 self.isHate = try values.decode(Bool.self, forKey: "hate")
                 self.isHateThreatening = try values.decode(Bool.self, forKey: "hate/threatening")
+                self.isHarassment = try values.decode(Bool.self, forKey: "harassment")
+                self.isHarassmentThreatening = try values.decode(Bool.self, forKey: "harassment/threatening")
+                self.isIllicit = try values.decode(Bool.self, forKey: "illicit")
+                self.isIllicitViolent = try values.decode(Bool.self, forKey: "illicit/violent")
                 self.isSelfHarm = try values.decode(Bool.self, forKey: "self-harm")
+                self.isSelfHarmIntent = try values.decode(Bool.self, forKey: "self-harm/intent")
+                self.isSelfHarmInstructions = try values.decode(Bool.self, forKey: "self-harm/instructions")
                 self.isSexual = try values.decode(Bool.self, forKey: "sexual")
                 self.isSexualMinors = try values.decode(Bool.self, forKey: "sexual/minors")
                 self.isViolence = try values.decode(Bool.self, forKey: "violence")
@@ -47,7 +88,13 @@ public struct CreateModerationResponse: Codable {
                 var values = encoder.container(keyedBy: StringCodingKey.self)
                 try values.encode(isHate, forKey: "hate")
                 try values.encode(isHateThreatening, forKey: "hate/threatening")
+                try values.encode(isHarassment, forKey: "harassment")
+                try values.encode(isHarassmentThreatening, forKey: "harassment/threatening")
+                try values.encode(isIllicit, forKey: "illicit")
+                try values.encode(isIllicitViolent, forKey: "illicit/violent")
                 try values.encode(isSelfHarm, forKey: "self-harm")
+                try values.encode(isSelfHarmIntent, forKey: "self-harm/intent")
+                try values.encode(isSelfHarmInstructions, forKey: "self-harm/instructions")
                 try values.encode(isSexual, forKey: "sexual")
                 try values.encode(isSexualMinors, forKey: "sexual/minors")
                 try values.encode(isViolence, forKey: "violence")
@@ -55,19 +102,45 @@ public struct CreateModerationResponse: Codable {
             }
         }
 
+        /// A list of the categories along with their scores as predicted by model.
         public struct CategoryScores: Codable {
+            /// The score for the category 'hate'.
             public var hate: Double
+            /// The score for the category 'hate/threatening'.
             public var hateThreatening: Double
+            /// The score for the category 'harassment'.
+            public var harassment: Double
+            /// The score for the category 'harassment/threatening'.
+            public var harassmentThreatening: Double
+            /// The score for the category 'illicit'.
+            public var illicit: Double
+            /// The score for the category 'illicit/violent'.
+            public var illicitViolent: Double
+            /// The score for the category 'self-harm'.
             public var selfHarm: Double
+            /// The score for the category 'self-harm/intent'.
+            public var selfHarmIntent: Double
+            /// The score for the category 'self-harm/instructions'.
+            public var selfHarmInstructions: Double
+            /// The score for the category 'sexual'.
             public var sexual: Double
+            /// The score for the category 'sexual/minors'.
             public var sexualMinors: Double
+            /// The score for the category 'violence'.
             public var violence: Double
+            /// The score for the category 'violence/graphic'.
             public var violenceGraphic: Double
 
-            public init(hate: Double, hateThreatening: Double, selfHarm: Double, sexual: Double, sexualMinors: Double, violence: Double, violenceGraphic: Double) {
+            public init(hate: Double, hateThreatening: Double, harassment: Double, harassmentThreatening: Double, illicit: Double, illicitViolent: Double, selfHarm: Double, selfHarmIntent: Double, selfHarmInstructions: Double, sexual: Double, sexualMinors: Double, violence: Double, violenceGraphic: Double) {
                 self.hate = hate
                 self.hateThreatening = hateThreatening
+                self.harassment = harassment
+                self.harassmentThreatening = harassmentThreatening
+                self.illicit = illicit
+                self.illicitViolent = illicitViolent
                 self.selfHarm = selfHarm
+                self.selfHarmIntent = selfHarmIntent
+                self.selfHarmInstructions = selfHarmInstructions
                 self.sexual = sexual
                 self.sexualMinors = sexualMinors
                 self.violence = violence
@@ -78,7 +151,13 @@ public struct CreateModerationResponse: Codable {
                 let values = try decoder.container(keyedBy: StringCodingKey.self)
                 self.hate = try values.decode(Double.self, forKey: "hate")
                 self.hateThreatening = try values.decode(Double.self, forKey: "hate/threatening")
+                self.harassment = try values.decode(Double.self, forKey: "harassment")
+                self.harassmentThreatening = try values.decode(Double.self, forKey: "harassment/threatening")
+                self.illicit = try values.decode(Double.self, forKey: "illicit")
+                self.illicitViolent = try values.decode(Double.self, forKey: "illicit/violent")
                 self.selfHarm = try values.decode(Double.self, forKey: "self-harm")
+                self.selfHarmIntent = try values.decode(Double.self, forKey: "self-harm/intent")
+                self.selfHarmInstructions = try values.decode(Double.self, forKey: "self-harm/instructions")
                 self.sexual = try values.decode(Double.self, forKey: "sexual")
                 self.sexualMinors = try values.decode(Double.self, forKey: "sexual/minors")
                 self.violence = try values.decode(Double.self, forKey: "violence")
@@ -89,7 +168,13 @@ public struct CreateModerationResponse: Codable {
                 var values = encoder.container(keyedBy: StringCodingKey.self)
                 try values.encode(hate, forKey: "hate")
                 try values.encode(hateThreatening, forKey: "hate/threatening")
+                try values.encode(harassment, forKey: "harassment")
+                try values.encode(harassmentThreatening, forKey: "harassment/threatening")
+                try values.encode(illicit, forKey: "illicit")
+                try values.encode(illicitViolent, forKey: "illicit/violent")
                 try values.encode(selfHarm, forKey: "self-harm")
+                try values.encode(selfHarmIntent, forKey: "self-harm/intent")
+                try values.encode(selfHarmInstructions, forKey: "self-harm/instructions")
                 try values.encode(sexual, forKey: "sexual")
                 try values.encode(sexualMinors, forKey: "sexual/minors")
                 try values.encode(violence, forKey: "violence")
@@ -97,10 +182,149 @@ public struct CreateModerationResponse: Codable {
             }
         }
 
-        public init(isFlagged: Bool, categories: Categories, categoryScores: CategoryScores) {
+        /// A list of the categories along with the input type(s) that the score applies to.
+        public struct CategoryAppliedInputTypes: Codable {
+            /// The applied input type(s) for the category 'hate'.
+            public var hate: [HateItem]
+            /// The applied input type(s) for the category 'hate/threatening'.
+            public var hateThreatening: [HateThreateningItem]
+            /// The applied input type(s) for the category 'harassment'.
+            public var harassment: [Harassmant]
+            /// The applied input type(s) for the category 'harassment/threatening'.
+            public var harassmentThreatening: [HarassmentThreateningItem]
+            /// The applied input type(s) for the category 'illicit'.
+            public var illicit: [IllicitItem]
+            /// The applied input type(s) for the category 'illicit/violent'.
+            public var illicitViolent: [IllicitViolentItem]
+            /// The applied input type(s) for the category 'self-harm'.
+            public var selfHarm: [SelfHarmItem]
+            /// The applied input type(s) for the category 'self-harm/intent'.
+            public var selfHarmIntent: [SelfHarmIntentItem]
+            /// The applied input type(s) for the category 'self-harm/instructions'.
+            public var selfHarmInstructions: [SelfHarmInstruction]
+            /// The applied input type(s) for the category 'sexual'.
+            public var sexual: [SexualItem]
+            /// The applied input type(s) for the category 'sexual/minors'.
+            public var sexualMinors: [SexualMinor]
+            /// The applied input type(s) for the category 'violence'.
+            public var violence: [ViolenceItem]
+            /// The applied input type(s) for the category 'violence/graphic'.
+            public var violenceGraphic: [ViolenceGraphicItem]
+
+            public enum HateItem: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum HateThreateningItem: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum Harassmant: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum HarassmentThreateningItem: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum IllicitItem: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum IllicitViolentItem: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum SelfHarmItem: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public enum SelfHarmIntentItem: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public enum SelfHarmInstruction: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public enum SexualItem: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public enum SexualMinor: String, Codable, CaseIterable {
+                case text
+            }
+
+            public enum ViolenceItem: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public enum ViolenceGraphicItem: String, Codable, CaseIterable {
+                case text
+                case image
+            }
+
+            public init(hate: [HateItem], hateThreatening: [HateThreateningItem], harassment: [Harassmant], harassmentThreatening: [HarassmentThreateningItem], illicit: [IllicitItem], illicitViolent: [IllicitViolentItem], selfHarm: [SelfHarmItem], selfHarmIntent: [SelfHarmIntentItem], selfHarmInstructions: [SelfHarmInstruction], sexual: [SexualItem], sexualMinors: [SexualMinor], violence: [ViolenceItem], violenceGraphic: [ViolenceGraphicItem]) {
+                self.hate = hate
+                self.hateThreatening = hateThreatening
+                self.harassment = harassment
+                self.harassmentThreatening = harassmentThreatening
+                self.illicit = illicit
+                self.illicitViolent = illicitViolent
+                self.selfHarm = selfHarm
+                self.selfHarmIntent = selfHarmIntent
+                self.selfHarmInstructions = selfHarmInstructions
+                self.sexual = sexual
+                self.sexualMinors = sexualMinors
+                self.violence = violence
+                self.violenceGraphic = violenceGraphic
+            }
+
+            public init(from decoder: Decoder) throws {
+                let values = try decoder.container(keyedBy: StringCodingKey.self)
+                self.hate = try values.decode([HateItem].self, forKey: "hate")
+                self.hateThreatening = try values.decode([HateThreateningItem].self, forKey: "hate/threatening")
+                self.harassment = try values.decode([Harassmant].self, forKey: "harassment")
+                self.harassmentThreatening = try values.decode([HarassmentThreateningItem].self, forKey: "harassment/threatening")
+                self.illicit = try values.decode([IllicitItem].self, forKey: "illicit")
+                self.illicitViolent = try values.decode([IllicitViolentItem].self, forKey: "illicit/violent")
+                self.selfHarm = try values.decode([SelfHarmItem].self, forKey: "self-harm")
+                self.selfHarmIntent = try values.decode([SelfHarmIntentItem].self, forKey: "self-harm/intent")
+                self.selfHarmInstructions = try values.decode([SelfHarmInstruction].self, forKey: "self-harm/instructions")
+                self.sexual = try values.decode([SexualItem].self, forKey: "sexual")
+                self.sexualMinors = try values.decode([SexualMinor].self, forKey: "sexual/minors")
+                self.violence = try values.decode([ViolenceItem].self, forKey: "violence")
+                self.violenceGraphic = try values.decode([ViolenceGraphicItem].self, forKey: "violence/graphic")
+            }
+
+            public func encode(to encoder: Encoder) throws {
+                var values = encoder.container(keyedBy: StringCodingKey.self)
+                try values.encode(hate, forKey: "hate")
+                try values.encode(hateThreatening, forKey: "hate/threatening")
+                try values.encode(harassment, forKey: "harassment")
+                try values.encode(harassmentThreatening, forKey: "harassment/threatening")
+                try values.encode(illicit, forKey: "illicit")
+                try values.encode(illicitViolent, forKey: "illicit/violent")
+                try values.encode(selfHarm, forKey: "self-harm")
+                try values.encode(selfHarmIntent, forKey: "self-harm/intent")
+                try values.encode(selfHarmInstructions, forKey: "self-harm/instructions")
+                try values.encode(sexual, forKey: "sexual")
+                try values.encode(sexualMinors, forKey: "sexual/minors")
+                try values.encode(violence, forKey: "violence")
+                try values.encode(violenceGraphic, forKey: "violence/graphic")
+            }
+        }
+
+        public init(isFlagged: Bool, categories: Categories, categoryScores: CategoryScores, categoryAppliedInputTypes: CategoryAppliedInputTypes) {
             self.isFlagged = isFlagged
             self.categories = categories
             self.categoryScores = categoryScores
+            self.categoryAppliedInputTypes = categoryAppliedInputTypes
         }
 
         public init(from decoder: Decoder) throws {
@@ -108,6 +332,7 @@ public struct CreateModerationResponse: Codable {
             self.isFlagged = try values.decode(Bool.self, forKey: "flagged")
             self.categories = try values.decode(Categories.self, forKey: "categories")
             self.categoryScores = try values.decode(CategoryScores.self, forKey: "category_scores")
+            self.categoryAppliedInputTypes = try values.decode(CategoryAppliedInputTypes.self, forKey: "category_applied_input_types")
         }
 
         public func encode(to encoder: Encoder) throws {
@@ -115,6 +340,7 @@ public struct CreateModerationResponse: Codable {
             try values.encode(isFlagged, forKey: "flagged")
             try values.encode(categories, forKey: "categories")
             try values.encode(categoryScores, forKey: "category_scores")
+            try values.encode(categoryAppliedInputTypes, forKey: "category_applied_input_types")
         }
     }
 

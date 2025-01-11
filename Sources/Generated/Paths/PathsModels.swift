@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {
@@ -16,7 +17,7 @@ extension Paths {
 
         /// Lists the currently available models, and provides basic information about each one such as the owner and availability.
         public var get: Request<OpenAIAPI.ListModelsResponse> {
-            Request(method: "GET", url: path, id: "listModels")
+            Request(path: path, method: "GET", id: "listModels")
         }
     }
 }

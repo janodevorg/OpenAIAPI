@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths.Images {
@@ -16,7 +17,7 @@ extension Paths.Images {
 
         /// Creates an image given a prompt.
         public func post(_ body: OpenAIAPI.CreateImageRequest) -> Request<OpenAIAPI.ImagesResponse> {
-            Request(method: "POST", url: path, body: body, id: "createImage")
+            Request(path: path, method: "POST", body: body, id: "createImage")
         }
     }
 }

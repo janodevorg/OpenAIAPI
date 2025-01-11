@@ -1,0 +1,24 @@
+--- openapi.yaml.original	2025-01-09 02:43:47
++++ openapi.yaml.temp	2025-01-09 02:43:47
+@@ -14195,8 +14195,8 @@
+           x-oaiExpandable: true
+         seed:
+           type: integer
+-          minimum: -9223372036854776000
+-          maximum: 9223372036854776000
++          minimum: -922337203685477600
++          maximum: 922337203685477600
+           nullable: true
+           description: >
+             This feature is in Beta.
+@@ -14828,8 +14828,8 @@
+             penalties.](/docs/guides/text-generation)
+         seed:
+           type: integer
+-          minimum: -9223372036854776000
+-          maximum: 9223372036854776000
++          minimum: -922337203685477600
++          maximum: 922337203685477600
+           nullable: true
+           description: >
+             If specified, our system will make a best effort to sample

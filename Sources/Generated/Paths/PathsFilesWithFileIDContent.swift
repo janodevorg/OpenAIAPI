@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths.Files.WithFileID {
@@ -14,9 +15,9 @@ extension Paths.Files.WithFileID {
         /// Path: `/files/{file_id}/content`
         public let path: String
 
-        /// Returns the contents of the specified file
+        /// Returns the contents of the specified file.
         public var get: Request<String> {
-            Request(method: "GET", url: path, id: "downloadFile")
+            Request(path: path, method: "GET", id: "downloadFile")
         }
     }
 }

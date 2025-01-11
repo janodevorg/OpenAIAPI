@@ -3,22 +3,59 @@
 
 import Foundation
 
+/// The `File` object represents a document that has been uploaded to OpenAI.
 public struct OpenAIFile: Codable {
+    /// The file identifier, which can be referenced in the API endpoints.
     public var id: String
-    public var object: String
+    /// The size of the file, in bytes.
     public var bytes: Int
+    /// The Unix timestamp (in seconds) for when the file was created.
     public var createdAt: Int
+    /// The name of the file.
     public var filename: String
-    public var purpose: String
-    public var status: String?
-    public var statusDetails: [String: AnyJSON]?
+    /// The object type, which is always `file`.
+    public var object: Object
+    /// The intended purpose of the file. Supported values are `assistants`, `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results` and `vision`.
+    public var purpose: Purpose
+    /// Deprecated. The current status of the file, which can be either `uploaded`, `processed`, or `error`.
+    ///
+    /// - warning: Deprecated.
+    public var status: Status
+    /// Deprecated. For details on why a fine-tuning training file failed validation, see the `error` field on `fine_tuning.job`.
+    ///
+    /// - warning: Deprecated.
+    public var statusDetails: String?
 
-    public init(id: String, object: String, bytes: Int, createdAt: Int, filename: String, purpose: String, status: String? = nil, statusDetails: [String: AnyJSON]? = nil) {
+    /// The object type, which is always `file`.
+    public enum Object: String, Codable, CaseIterable {
+        case file
+    }
+
+    /// The intended purpose of the file. Supported values are `assistants`, `assistants_output`, `batch`, `batch_output`, `fine-tune`, `fine-tune-results` and `vision`.
+    public enum Purpose: String, Codable, CaseIterable {
+        case assistants
+        case assistantsOutput = "assistants_output"
+        case batch
+        case batchOutput = "batch_output"
+        case fineTune = "fine-tune"
+        case fineTuneResults = "fine-tune-results"
+        case vision
+    }
+
+    /// Deprecated. The current status of the file, which can be either `uploaded`, `processed`, or `error`.
+    @available(*, deprecated, message: "Deprecated")
+    public enum Status: String, Codable, CaseIterable {
+        case uploaded
+        case processed
+        case error
+    }
+
+    public init(id: String, bytes: Int, createdAt: Int, filename: String, object: Object, purpose: Purpose, status: Status, statusDetails: String? = nil) {
         self.id = id
-        self.object = object
         self.bytes = bytes
         self.createdAt = createdAt
         self.filename = filename
+        self.object = object
         self.purpose = purpose
         self.status = status
         self.statusDetails = statusDetails
@@ -27,24 +64,24 @@ public struct OpenAIFile: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.id = try values.decode(String.self, forKey: "id")
-        self.object = try values.decode(String.self, forKey: "object")
         self.bytes = try values.decode(Int.self, forKey: "bytes")
         self.createdAt = try values.decode(Int.self, forKey: "created_at")
         self.filename = try values.decode(String.self, forKey: "filename")
-        self.purpose = try values.decode(String.self, forKey: "purpose")
-        self.status = try values.decodeIfPresent(String.self, forKey: "status")
-        self.statusDetails = try values.decodeIfPresent([String: AnyJSON].self, forKey: "status_details")
+        self.object = try values.decode(Object.self, forKey: "object")
+        self.purpose = try values.decode(Purpose.self, forKey: "purpose")
+        self.status = try values.decode(Status.self, forKey: "status")
+        self.statusDetails = try values.decodeIfPresent(String.self, forKey: "status_details")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(id, forKey: "id")
-        try values.encode(object, forKey: "object")
         try values.encode(bytes, forKey: "bytes")
         try values.encode(createdAt, forKey: "created_at")
         try values.encode(filename, forKey: "filename")
+        try values.encode(object, forKey: "object")
         try values.encode(purpose, forKey: "purpose")
-        try values.encodeIfPresent(status, forKey: "status")
+        try values.encode(status, forKey: "status")
         try values.encodeIfPresent(statusDetails, forKey: "status_details")
     }
 }

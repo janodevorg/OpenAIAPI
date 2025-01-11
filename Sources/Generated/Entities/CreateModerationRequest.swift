@@ -4,19 +4,133 @@
 import Foundation
 
 public struct CreateModerationRequest: Codable {
-    /// The input text to classify
+    /// Input (or inputs) to classify. Can be a single string, an array of strings, or
+    /// an array of multi-modal input objects similar to other models.
     public var input: Input
-    /// Two content moderations models are available: `text-moderation-stable` and `text-moderation-latest`.
-    /// 
-    /// The default is `text-moderation-latest` which will be automatically upgraded over time. This ensures you are always using our most accurate model. If you use `text-moderation-stable`, we will provide advanced notice before updating the model. Accuracy of `text-moderation-stable` may be slightly lower than for `text-moderation-latest`.
+    /// The content moderation model you would like to use. Learn more in
+    /// [the moderation guide](/docs/guides/moderation), and learn about
+    /// available models [here](/docs/models#moderation).
     ///
-    /// Example: "text-moderation-stable"
-    public var model: String?
+    /// Example: "omni-moderation-2024-09-26"
+    public var model: Model?
 
-    /// The input text to classify
+    /// Input (or inputs) to classify. Can be a single string, an array of strings, or
+    /// an array of multi-modal input objects similar to other models.
     public enum Input: Codable {
         case string(String)
         case strings([String])
+        case placeholderItems([PlaceholderItem])
+
+        public enum PlaceholderItem: Codable {
+            case a(A)
+            case b(B)
+
+            /// An object describing an image to classify.
+            public struct A: Codable {
+                /// Always `image_url`.
+                public var type: `Type`
+                /// Contains either an image URL or a data URL for a base64 encoded image.
+                public var imageURL: ImageURL
+
+                /// Always `image_url`.
+                public enum `Type`: String, Codable, CaseIterable {
+                    case imageURL = "image_url"
+                }
+
+                /// Contains either an image URL or a data URL for a base64 encoded image.
+                public struct ImageURL: Codable {
+                    /// Either a URL of the image or the base64 encoded image data.
+                    ///
+                    /// Example: "https://example.com/image.jpg"
+                    public var url: URL
+
+                    public init(url: URL) {
+                        self.url = url
+                    }
+
+                    public init(from decoder: Decoder) throws {
+                        let values = try decoder.container(keyedBy: StringCodingKey.self)
+                        self.url = try values.decode(URL.self, forKey: "url")
+                    }
+
+                    public func encode(to encoder: Encoder) throws {
+                        var values = encoder.container(keyedBy: StringCodingKey.self)
+                        try values.encode(url, forKey: "url")
+                    }
+                }
+
+                public init(type: `Type`, imageURL: ImageURL) {
+                    self.type = type
+                    self.imageURL = imageURL
+                }
+
+                public init(from decoder: Decoder) throws {
+                    let values = try decoder.container(keyedBy: StringCodingKey.self)
+                    self.type = try values.decode(`Type`.self, forKey: "type")
+                    self.imageURL = try values.decode(ImageURL.self, forKey: "image_url")
+                }
+
+                public func encode(to encoder: Encoder) throws {
+                    var values = encoder.container(keyedBy: StringCodingKey.self)
+                    try values.encode(type, forKey: "type")
+                    try values.encode(imageURL, forKey: "image_url")
+                }
+            }
+
+            /// An object describing text to classify.
+            public struct B: Codable {
+                /// Always `text`.
+                public var type: `Type`
+                /// A string of text to classify.
+                ///
+                /// Example: "I want to kill them"
+                public var text: String
+
+                /// Always `text`.
+                public enum `Type`: String, Codable, CaseIterable {
+                    case text
+                }
+
+                public init(type: `Type`, text: String) {
+                    self.type = type
+                    self.text = text
+                }
+
+                public init(from decoder: Decoder) throws {
+                    let values = try decoder.container(keyedBy: StringCodingKey.self)
+                    self.type = try values.decode(`Type`.self, forKey: "type")
+                    self.text = try values.decode(String.self, forKey: "text")
+                }
+
+                public func encode(to encoder: Encoder) throws {
+                    var values = encoder.container(keyedBy: StringCodingKey.self)
+                    try values.encode(type, forKey: "type")
+                    try values.encode(text, forKey: "text")
+                }
+            }
+
+            public init(from decoder: Decoder) throws {
+                let container = try decoder.singleValueContainer()
+                if let value = try? container.decode(A.self) {
+                    self = .a(value)
+                } else if let value = try? container.decode(B.self) {
+                    self = .b(value)
+                } else {
+                    throw DecodingError.dataCorruptedError(
+                        in: container,
+                        debugDescription: "Data could not be decoded as any of the expected types (A, B)."
+                    )
+                }
+            }
+
+            public func encode(to encoder: Encoder) throws {
+                var container = encoder.singleValueContainer()
+                switch self {
+                case .a(let value): try container.encode(value)
+                case .b(let value): try container.encode(value)
+                }
+            }
+        }
 
         public init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
@@ -24,10 +138,12 @@ public struct CreateModerationRequest: Codable {
                 self = .string(value)
             } else if let value = try? container.decode([String].self) {
                 self = .strings(value)
+            } else if let value = try? container.decode([PlaceholderItem].self) {
+                self = .placeholderItems(value)
             } else {
                 throw DecodingError.dataCorruptedError(
                     in: container,
-                    debugDescription: "Data could not be decoded as any of the expected types (String, [String])."
+                    debugDescription: "Data could not be decoded as any of the expected types (String, [String], [PlaceholderItem])."
                 )
             }
         }
@@ -37,11 +153,46 @@ public struct CreateModerationRequest: Codable {
             switch self {
             case .string(let value): try container.encode(value)
             case .strings(let value): try container.encode(value)
+            case .placeholderItems(let value): try container.encode(value)
             }
         }
     }
 
-    public init(input: Input, model: String? = nil) {
+    /// The content moderation model you would like to use. Learn more in
+    /// [the moderation guide](/docs/guides/moderation), and learn about
+    /// available models [here](/docs/models#moderation).
+    ///
+    /// Example: "omni-moderation-2024-09-26"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case omniModerationLatest = "omni-moderation-latest"
+            case omniModeration20240926 = "omni-moderation-2024-09-26"
+            case textModerationLatest = "text-moderation-latest"
+            case textModerationStable = "text-moderation-stable"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
+    }
+
+    public init(input: Input, model: Model? = nil) {
         self.input = input
         self.model = model
     }
@@ -49,7 +200,7 @@ public struct CreateModerationRequest: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.input = try values.decode(Input.self, forKey: "input")
-        self.model = try values.decodeIfPresent(String.self, forKey: "model")
+        self.model = try values.decodeIfPresent(Model.self, forKey: "model")
     }
 
     public func encode(to encoder: Encoder) throws {

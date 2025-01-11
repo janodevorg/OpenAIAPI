@@ -4,45 +4,86 @@
 import Foundation
 
 public struct CreateTranscriptionRequest: Codable {
-    /// The audio file to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.
-    public var file: String
-    /// ID of the model to use. Only `whisper-1` is currently available.
-    public var model: String
-    /// An optional text to guide the model's style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.
-    public var prompt: String?
-    /// The format of the transcript output, in one of these options: json, text, srt, verbose_json, or vtt.
-    public var responseFormat: String?
-    /// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use [log probability](https://en.wikipedia.org/wiki/Log_probability) to automatically increase the temperature until certain thresholds are hit.
-    public var temperature: Double?
+    /// The audio file object (not file name) to transcribe, in one of these formats: flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+    public var file: Data
+    /// ID of the model to use. Only `whisper-1` (which is powered by our open source Whisper V2 model) is currently available.
+    ///
+    /// Example: "whisper-1"
+    public var model: Model
     /// The language of the input audio. Supplying the input language in [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format will improve accuracy and latency.
     public var language: String?
+    /// An optional text to guide the model's style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text#prompting) should match the audio language.
+    public var prompt: String?
+    /// The format of the output, in one of these options: `json`, `text`, `srt`, `verbose_json`, or `vtt`.
+    public var responseFormat: AudioResponseFormat?
+    /// The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use [log probability](https://en.wikipedia.org/wiki/Log_probability) to automatically increase the temperature until certain thresholds are hit.
+    public var temperature: Double?
+    /// The timestamp granularities to populate for this transcription. `response_format` must be set `verbose_json` to use timestamp granularities. Either or both of these options are supported: `word`, or `segment`. Note: There is no additional latency for segment timestamps, but generating word timestamps incurs additional latency.
+    public var timestampGranularities: [TimestampGranularity]?
 
-    public init(file: String, model: String, prompt: String? = nil, responseFormat: String? = nil, temperature: Double? = nil, language: String? = nil) {
+    /// ID of the model to use. Only `whisper-1` (which is powered by our open source Whisper V2 model) is currently available.
+    ///
+    /// Example: "whisper-1"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case whisper1 = "whisper-1"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
+    }
+
+    public enum TimestampGranularity: String, Codable, CaseIterable {
+        case word
+        case segment
+    }
+
+    public init(file: Data, model: Model, language: String? = nil, prompt: String? = nil, responseFormat: AudioResponseFormat? = nil, temperature: Double? = nil, timestampGranularities: [TimestampGranularity]? = nil) {
         self.file = file
         self.model = model
+        self.language = language
         self.prompt = prompt
         self.responseFormat = responseFormat
         self.temperature = temperature
-        self.language = language
+        self.timestampGranularities = timestampGranularities
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.file = try values.decode(String.self, forKey: "file")
-        self.model = try values.decode(String.self, forKey: "model")
-        self.prompt = try values.decodeIfPresent(String.self, forKey: "prompt")
-        self.responseFormat = try values.decodeIfPresent(String.self, forKey: "response_format")
-        self.temperature = try values.decodeIfPresent(Double.self, forKey: "temperature")
+        self.file = try values.decode(Data.self, forKey: "file")
+        self.model = try values.decode(Model.self, forKey: "model")
         self.language = try values.decodeIfPresent(String.self, forKey: "language")
+        self.prompt = try values.decodeIfPresent(String.self, forKey: "prompt")
+        self.responseFormat = try values.decodeIfPresent(AudioResponseFormat.self, forKey: "response_format")
+        self.temperature = try values.decodeIfPresent(Double.self, forKey: "temperature")
+        self.timestampGranularities = try values.decodeIfPresent([TimestampGranularity].self, forKey: "timestamp_granularities[]")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(file, forKey: "file")
         try values.encode(model, forKey: "model")
+        try values.encodeIfPresent(language, forKey: "language")
         try values.encodeIfPresent(prompt, forKey: "prompt")
         try values.encodeIfPresent(responseFormat, forKey: "response_format")
         try values.encodeIfPresent(temperature, forKey: "temperature")
-        try values.encodeIfPresent(language, forKey: "language")
+        try values.encodeIfPresent(timestampGranularities, forKey: "timestamp_granularities[]")
     }
 }

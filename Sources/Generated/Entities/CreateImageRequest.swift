@@ -4,35 +4,76 @@
 import Foundation
 
 public struct CreateImageRequest: Codable {
-    /// A text description of the desired image(s). The maximum length is 1000 characters.
+    /// A text description of the desired image(s). The maximum length is 1000 characters for `dall-e-2` and 4000 characters for `dall-e-3`.
     ///
     /// Example: "A cute baby sea otter"
     public var prompt: String
-    /// The number of images to generate. Must be between 1 and 10.
-    public var n: Int?
-    /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
+    /// The model to use for image generation.
     ///
-    /// Example: "1024x1024"
-    public var size: Size?
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
+    /// Example: "dall-e-3"
+    public var model: Model?
+    /// The number of images to generate. Must be between 1 and 10. For `dall-e-3`, only `n=1` is supported.
+    public var n: Int?
+    /// The quality of the image that will be generated. `hd` creates images with finer details and greater consistency across the image. This param is only supported for `dall-e-3`.
+    ///
+    /// Example: "standard"
+    public var quality: Quality?
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
     ///
     /// Example: "url"
     public var responseFormat: ResponseFormat?
-    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices/end-user-ids).
+    /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024` for `dall-e-2`. Must be one of `1024x1024`, `1792x1024`, or `1024x1792` for `dall-e-3` models.
+    ///
+    /// Example: "1024x1024"
+    public var size: Size?
+    /// The style of the generated images. Must be one of `vivid` or `natural`. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images. This param is only supported for `dall-e-3`.
+    ///
+    /// Example: "vivid"
+    public var style: Style?
+    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices#end-user-ids).
     ///
     /// Example: "user-1234"
     public var user: String?
 
-    /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
+    /// The model to use for image generation.
     ///
-    /// Example: "1024x1024"
-    public enum Size: String, Codable, CaseIterable {
-        case _256x256 = "256x256"
-        case _512x512 = "512x512"
-        case _1024x1024 = "1024x1024"
+    /// Example: "dall-e-3"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case dallE2 = "dall-e-2"
+            case dallE3 = "dall-e-3"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
     }
 
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
+    /// The quality of the image that will be generated. `hd` creates images with finer details and greater consistency across the image. This param is only supported for `dall-e-3`.
+    ///
+    /// Example: "standard"
+    public enum Quality: String, Codable, CaseIterable {
+        case standard
+        case hd
+    }
+
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
     ///
     /// Example: "url"
     public enum ResponseFormat: String, Codable, CaseIterable {
@@ -40,29 +81,57 @@ public struct CreateImageRequest: Codable {
         case b64JSON = "b64_json"
     }
 
-    public init(prompt: String, n: Int? = nil, size: Size? = nil, responseFormat: ResponseFormat? = nil, user: String? = nil) {
+    /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024` for `dall-e-2`. Must be one of `1024x1024`, `1792x1024`, or `1024x1792` for `dall-e-3` models.
+    ///
+    /// Example: "1024x1024"
+    public enum Size: String, Codable, CaseIterable {
+        case _256x256 = "256x256"
+        case _512x512 = "512x512"
+        case _1024x1024 = "1024x1024"
+        case _1792x1024 = "1792x1024"
+        case _1024x1792 = "1024x1792"
+    }
+
+    /// The style of the generated images. Must be one of `vivid` or `natural`. Vivid causes the model to lean towards generating hyper-real and dramatic images. Natural causes the model to produce more natural, less hyper-real looking images. This param is only supported for `dall-e-3`.
+    ///
+    /// Example: "vivid"
+    public enum Style: String, Codable, CaseIterable {
+        case vivid
+        case natural
+    }
+
+    public init(prompt: String, model: Model? = nil, n: Int? = nil, quality: Quality? = nil, responseFormat: ResponseFormat? = nil, size: Size? = nil, style: Style? = nil, user: String? = nil) {
         self.prompt = prompt
+        self.model = model
         self.n = n
-        self.size = size
+        self.quality = quality
         self.responseFormat = responseFormat
+        self.size = size
+        self.style = style
         self.user = user
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.prompt = try values.decode(String.self, forKey: "prompt")
+        self.model = try values.decodeIfPresent(Model.self, forKey: "model")
         self.n = try values.decodeIfPresent(Int.self, forKey: "n")
-        self.size = try values.decodeIfPresent(Size.self, forKey: "size")
+        self.quality = try values.decodeIfPresent(Quality.self, forKey: "quality")
         self.responseFormat = try values.decodeIfPresent(ResponseFormat.self, forKey: "response_format")
+        self.size = try values.decodeIfPresent(Size.self, forKey: "size")
+        self.style = try values.decodeIfPresent(Style.self, forKey: "style")
         self.user = try values.decodeIfPresent(String.self, forKey: "user")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(prompt, forKey: "prompt")
+        try values.encodeIfPresent(model, forKey: "model")
         try values.encodeIfPresent(n, forKey: "n")
-        try values.encodeIfPresent(size, forKey: "size")
+        try values.encodeIfPresent(quality, forKey: "quality")
         try values.encodeIfPresent(responseFormat, forKey: "response_format")
+        try values.encodeIfPresent(size, forKey: "size")
+        try values.encodeIfPresent(style, forKey: "style")
         try values.encodeIfPresent(user, forKey: "user")
     }
 }

@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {
@@ -14,14 +15,50 @@ extension Paths {
         /// Path: `/files`
         public let path: String
 
-        /// Returns a list of files that belong to the user's organization.
-        public var get: Request<OpenAIAPI.ListFilesResponse> {
-            Request(method: "GET", url: path, id: "listFiles")
+        /// Returns a list of files.
+        public func get(parameters: GetParameters? = nil) -> Request<OpenAIAPI.ListFilesResponse> {
+            Request(path: path, method: "GET", query: parameters?.asQuery, id: "listFiles")
         }
 
-        /// Upload a file that contains document(s) to be used across various endpoints/features. Currently, the size of all the files uploaded by one organization can be up to 1 GB. Please contact us if you need to increase the storage limit.
+        public struct GetParameters {
+            public var purpose: String?
+            public var limit: Int?
+            public var order: Order?
+            public var after: String?
+
+            public enum Order: String, Codable, CaseIterable {
+                case asc
+                case desc
+            }
+
+            public init(purpose: String? = nil, limit: Int? = nil, order: Order? = nil, after: String? = nil) {
+                self.purpose = purpose
+                self.limit = limit
+                self.order = order
+                self.after = after
+            }
+
+            public var asQuery: [(String, String?)] {
+                let encoder = URLQueryEncoder()
+                encoder.encode(purpose, forKey: "purpose")
+                encoder.encode(limit, forKey: "limit")
+                encoder.encode(order, forKey: "order")
+                encoder.encode(after, forKey: "after")
+                return encoder.items
+            }
+        }
+
+        /// Upload a file that can be used across various endpoints. Individual files can be up to 512 MB, and the size of all files uploaded by one organization can be up to 100 GB.
+        /// 
+        /// The Assistants API supports files up to 2 million tokens and of specific file types. See the [Assistants Tools guide](/docs/assistants/tools) for details.
+        /// 
+        /// The Fine-tuning API only supports `.jsonl` files. The input also has certain required formats for fine-tuning [chat](/docs/api-reference/fine-tuning/chat-input) or [completions](/docs/api-reference/fine-tuning/completions-input) models.
+        /// 
+        /// The Batch API only supports `.jsonl` files up to 200 MB in size. The input also has a specific required [format](/docs/api-reference/batch/request-input).
+        /// 
+        /// Please [contact us](https://help.openai.com/) if you need to increase these storage limits.
         public func post(_ body: Data) -> Request<OpenAIAPI.OpenAIFile> {
-            Request(method: "POST", url: path, body: body, id: "createFile")
+            Request(path: path, method: "POST", body: body, id: "createFile")
         }
     }
 }

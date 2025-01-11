@@ -5,10 +5,14 @@ import Foundation
 
 public struct DeleteFileResponse: Codable {
     public var id: String
-    public var object: String
+    public var object: Object
     public var isDeleted: Bool
 
-    public init(id: String, object: String, isDeleted: Bool) {
+    public enum Object: String, Codable, CaseIterable {
+        case file
+    }
+
+    public init(id: String, object: Object, isDeleted: Bool) {
         self.id = id
         self.object = object
         self.isDeleted = isDeleted
@@ -17,7 +21,7 @@ public struct DeleteFileResponse: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.id = try values.decode(String.self, forKey: "id")
-        self.object = try values.decode(String.self, forKey: "object")
+        self.object = try values.decode(Object.self, forKey: "object")
         self.isDeleted = try values.decode(Bool.self, forKey: "deleted")
     }
 

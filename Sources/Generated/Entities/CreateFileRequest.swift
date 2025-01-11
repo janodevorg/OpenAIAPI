@@ -4,24 +4,32 @@
 import Foundation
 
 public struct CreateFileRequest: Codable {
-    /// Name of the [JSON Lines](https://jsonlines.readthedocs.io/en/latest/) file to be uploaded.
+    /// The File object (not file name) to be uploaded.
+    public var file: Data
+    /// The intended purpose of the uploaded file.
     /// 
-    /// If the `purpose` is set to "fine-tune", each line is a JSON record with "prompt" and "completion" fields representing your [training examples](/docs/guides/fine-tuning/prepare-training-data).
-    public var file: String
-    /// The intended purpose of the uploaded documents.
-    /// 
-    /// Use "fine-tune" for [Fine-tuning](/docs/api-reference/fine-tunes). This allows us to validate the format of the uploaded file.
-    public var purpose: String
+    /// Use "assistants" for [Assistants](/docs/api-reference/assistants) and [Message](/docs/api-reference/messages) files, "vision" for Assistants image file inputs, "batch" for [Batch API](/docs/guides/batch), and "fine-tune" for [Fine-tuning](/docs/api-reference/fine-tuning).
+    public var purpose: Purpose
 
-    public init(file: String, purpose: String) {
+    /// The intended purpose of the uploaded file.
+    /// 
+    /// Use "assistants" for [Assistants](/docs/api-reference/assistants) and [Message](/docs/api-reference/messages) files, "vision" for Assistants image file inputs, "batch" for [Batch API](/docs/guides/batch), and "fine-tune" for [Fine-tuning](/docs/api-reference/fine-tuning).
+    public enum Purpose: String, Codable, CaseIterable {
+        case assistants
+        case batch
+        case fineTune = "fine-tune"
+        case vision
+    }
+
+    public init(file: Data, purpose: Purpose) {
         self.file = file
         self.purpose = purpose
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.file = try values.decode(String.self, forKey: "file")
-        self.purpose = try values.decode(String.self, forKey: "purpose")
+        self.file = try values.decode(Data.self, forKey: "file")
+        self.purpose = try values.decode(Purpose.self, forKey: "purpose")
     }
 
     public func encode(to encoder: Encoder) throws {

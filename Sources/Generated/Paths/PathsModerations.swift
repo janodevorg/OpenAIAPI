@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {
@@ -14,9 +15,10 @@ extension Paths {
         /// Path: `/moderations`
         public let path: String
 
-        /// Classifies if text violates OpenAI's Content Policy
+        /// Classifies if text and/or image inputs are potentially harmful. Learn
+        /// more in the [moderation guide](/docs/guides/moderation).
         public func post(_ body: OpenAIAPI.CreateModerationRequest) -> Request<OpenAIAPI.CreateModerationResponse> {
-            Request(method: "POST", url: path, body: body, id: "createModeration")
+            Request(path: path, method: "POST", body: body, id: "createModeration")
         }
     }
 }

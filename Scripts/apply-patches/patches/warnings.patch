@@ -1,0 +1,174 @@
+--- openapi.current.yaml	2025-01-09 05:29:27
++++ openapi.patched.yaml	2025-01-09 05:34:04
+@@ -13475,7 +13475,6 @@
+             the grouped costs result.
+       required:
+         - object
+-        - sessions
+       x-oaiMeta:
+         name: Costs object
+         example: |
+@@ -13681,10 +13680,8 @@
+                           characters long.
+                         x-oaiTypeLabel: map
+               oneOf:
+-                - required:
+-                    - vector_store_ids
+-                - required:
+-                    - vector_stores
++                - $ref: "#/components/schemas/FileSearchWithIds"
++                - $ref: "#/components/schemas/FileSearchWithStores"
+           nullable: true
+         metadata:
+           description: >
+@@ -13744,7 +13741,6 @@
+               - finish_reason
+               - index
+               - message
+-              - logprobs
+             properties:
+               finish_reason:
+                 type: string
+@@ -16659,10 +16655,8 @@
+                         x-oaiTypeLabel: map
+                     x-oaiExpandable: true
+               oneOf:
+-                - required:
+-                    - vector_store_ids
+-                - required:
+-                    - vector_stores
++                - $ref: "#/components/schemas/FileSearchWithIds"
++                - $ref: "#/components/schemas/FileSearchWithStores"
+           nullable: true
+         metadata:
+           description: >
+@@ -17220,6 +17214,121 @@
+           maximum: 1
+       required:
+         - score_threshold
++    FileSearchWithIds:
++      type: object
++      description: File search configuration using 'vector_store_ids'.
++      properties:
++        vector_store_ids:
++          type: array
++          description: >
++            The [vector store](/docs/api-reference/vector-stores/object)
++            attached to this assistant.
++          maxItems: 1
++          items:
++            type: string
++      required:
++        - vector_store_ids
++    FileSearchWithStores:
++      type: object
++      description: File search configuration using 'vector_stores'.
++      properties:
++        vector_stores:
++          type: array
++          description: >
++            Create a vector store and attach it to this assistant.
++          maxItems: 1
++          items:
++            type: object
++            properties:
++              file_ids:
++                type: array
++                items:
++                  type: string
++                  description: >
++                    A helper to create a [vector
++                    store](/docs/api-reference/vector-stores/object) with
++                    file_ids and attach it to this assistant. There can be a
++                    maximum of 1 vector store attached to the assistant.
++                  maxItems: 1
++                  items:
++                    type: object
++                    properties:
++                      file_ids:
++                        type: array
++                        description: >
++                          A list of [file](/docs/api-reference/files) IDs to add
++                          to the vector store. There can be a maximum of 10000
++                          files in a vector store.
++                        maxItems: 10000
++                        items:
++                          type: string
++                      chunking_strategy:
++                        type: object
++                        description: The chunking strategy used to chunk the file(s). If not set, will
++                          use the `auto` strategy.
++                        oneOf:
++                          - type: object
++                            title: Auto Chunking Strategy
++                            description: The default strategy. This strategy currently uses a
++                              `max_chunk_size_tokens` of `800` and
++                              `chunk_overlap_tokens` of `400`.
++                            additionalProperties: false
++                            properties:
++                              type:
++                                type: string
++                                description: Always `auto`.
++                                enum:
++                                  - auto
++                            required:
++                              - type
++                          - type: object
++                            title: Static Chunking Strategy
++                            additionalProperties: false
++                            properties:
++                              type:
++                                type: string
++                                description: Always `static`.
++                                enum:
++                                  - static
++                              static:
++                                type: object
++                                additionalProperties: false
++                                properties:
++                                  max_chunk_size_tokens:
++                                    type: integer
++                                    minimum: 100
++                                    maximum: 4096
++                                    description: The maximum number of tokens in each chunk. The default value is
++                                      `800`. The minimum value is `100` and the
++                                      maximum value is `4096`.
++                                  chunk_overlap_tokens:
++                                    type: integer
++                                    description: >
++                                      The number of tokens that overlap between
++                                      chunks. The default value is `400`.
++
++
++                                      Note that the overlap must not exceed half
++                                      of `max_chunk_size_tokens`.
++                                required:
++                                  - max_chunk_size_tokens
++                                  - chunk_overlap_tokens
++                            required:
++                              - type
++                              - static
++                        x-oaiExpandable: true
++                      metadata:
++                        type: object
++                        description: >
++                          Set of 16 key-value pairs that can be attached to a
++                          vector store. This can be useful for storing
++                          additional information about the vector store in a
++                          structured format. Keys can be a maximum of 64
++                          characters long and values can be a maximum of 512
++                          characters long.
++                        x-oaiTypeLabel: map
++      required:
++        - vector_stores
+     FineTuneChatCompletionRequestAssistantMessage:
+       allOf:
+         - type: object
+@@ -23200,7 +23309,6 @@
+                 Schema is supported when `strict` is `true`. To learn more, read
+                 the [Structured Outputs guide](/docs/guides/structured-outputs).
+           required:
+-            - type
+             - name
+       required:
+         - type

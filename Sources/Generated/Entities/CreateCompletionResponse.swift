@@ -3,126 +3,131 @@
 
 import Foundation
 
+/// Represents a completion response from the API. Note: both the streamed and non-streamed response objects share the same shape (unlike the chat endpoint).
 public struct CreateCompletionResponse: Codable {
+    /// A unique identifier for the completion.
     public var id: String
-    public var object: String
-    public var created: Int
-    public var model: String
+    /// The list of completion choices the model generated for the input prompt.
     public var choices: [Choice]
-    public var usage: Usage?
+    /// The Unix timestamp (in seconds) of when the completion was created.
+    public var created: Int
+    /// The model used for completion.
+    public var model: String
+    /// This fingerprint represents the backend configuration that the model runs with.
+    /// 
+    /// Can be used in conjunction with the `seed` request parameter to understand when backend changes have been made that might impact determinism.
+    public var systemFingerprint: String?
+    /// The object type, which is always "text_completion"
+    public var object: Object
+    /// Usage statistics for the completion request.
+    public var usage: CompletionUsage?
 
     public struct Choice: Codable {
-        public var text: String?
-        public var index: Int?
+        /// The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence,
+        /// `length` if the maximum number of tokens specified in the request was reached,
+        /// or `content_filter` if content was omitted due to a flag from our content filters.
+        public var finishReason: FinishReason
+        public var index: Int
         public var logprobs: Logprobs?
-        public var finishReason: String?
+        public var text: String
+
+        /// The reason the model stopped generating tokens. This will be `stop` if the model hit a natural stop point or a provided stop sequence,
+        /// `length` if the maximum number of tokens specified in the request was reached,
+        /// or `content_filter` if content was omitted due to a flag from our content filters.
+        public enum FinishReason: String, Codable, CaseIterable {
+            case stop
+            case length
+            case contentFilter = "content_filter"
+        }
 
         public struct Logprobs: Codable {
-            public var tokens: [String]?
-            public var tokenLogprobs: [Double]?
-            public var topLogprobs: [[String: AnyJSON]]?
             public var textOffset: [Int]?
+            public var tokenLogprobs: [Double]?
+            public var tokens: [String]?
+            public var topLogprobs: [[String: Double]]?
 
-            public init(tokens: [String]? = nil, tokenLogprobs: [Double]? = nil, topLogprobs: [[String: AnyJSON]]? = nil, textOffset: [Int]? = nil) {
-                self.tokens = tokens
-                self.tokenLogprobs = tokenLogprobs
-                self.topLogprobs = topLogprobs
+            public init(textOffset: [Int]? = nil, tokenLogprobs: [Double]? = nil, tokens: [String]? = nil, topLogprobs: [[String: Double]]? = nil) {
                 self.textOffset = textOffset
+                self.tokenLogprobs = tokenLogprobs
+                self.tokens = tokens
+                self.topLogprobs = topLogprobs
             }
 
             public init(from decoder: Decoder) throws {
                 let values = try decoder.container(keyedBy: StringCodingKey.self)
-                self.tokens = try values.decodeIfPresent([String].self, forKey: "tokens")
-                self.tokenLogprobs = try values.decodeIfPresent([Double].self, forKey: "token_logprobs")
-                self.topLogprobs = try values.decodeIfPresent([[String: AnyJSON]].self, forKey: "top_logprobs")
                 self.textOffset = try values.decodeIfPresent([Int].self, forKey: "text_offset")
+                self.tokenLogprobs = try values.decodeIfPresent([Double].self, forKey: "token_logprobs")
+                self.tokens = try values.decodeIfPresent([String].self, forKey: "tokens")
+                self.topLogprobs = try values.decodeIfPresent([[String: Double]].self, forKey: "top_logprobs")
             }
 
             public func encode(to encoder: Encoder) throws {
                 var values = encoder.container(keyedBy: StringCodingKey.self)
-                try values.encodeIfPresent(tokens, forKey: "tokens")
-                try values.encodeIfPresent(tokenLogprobs, forKey: "token_logprobs")
-                try values.encodeIfPresent(topLogprobs, forKey: "top_logprobs")
                 try values.encodeIfPresent(textOffset, forKey: "text_offset")
+                try values.encodeIfPresent(tokenLogprobs, forKey: "token_logprobs")
+                try values.encodeIfPresent(tokens, forKey: "tokens")
+                try values.encodeIfPresent(topLogprobs, forKey: "top_logprobs")
             }
         }
 
-        public init(text: String? = nil, index: Int? = nil, logprobs: Logprobs? = nil, finishReason: String? = nil) {
-            self.text = text
+        public init(finishReason: FinishReason, index: Int, logprobs: Logprobs? = nil, text: String) {
+            self.finishReason = finishReason
             self.index = index
             self.logprobs = logprobs
-            self.finishReason = finishReason
+            self.text = text
         }
 
         public init(from decoder: Decoder) throws {
             let values = try decoder.container(keyedBy: StringCodingKey.self)
-            self.text = try values.decodeIfPresent(String.self, forKey: "text")
-            self.index = try values.decodeIfPresent(Int.self, forKey: "index")
+            self.finishReason = try values.decode(FinishReason.self, forKey: "finish_reason")
+            self.index = try values.decode(Int.self, forKey: "index")
             self.logprobs = try values.decodeIfPresent(Logprobs.self, forKey: "logprobs")
-            self.finishReason = try values.decodeIfPresent(String.self, forKey: "finish_reason")
+            self.text = try values.decode(String.self, forKey: "text")
         }
 
         public func encode(to encoder: Encoder) throws {
             var values = encoder.container(keyedBy: StringCodingKey.self)
-            try values.encodeIfPresent(text, forKey: "text")
-            try values.encodeIfPresent(index, forKey: "index")
+            try values.encode(finishReason, forKey: "finish_reason")
+            try values.encode(index, forKey: "index")
             try values.encodeIfPresent(logprobs, forKey: "logprobs")
-            try values.encodeIfPresent(finishReason, forKey: "finish_reason")
+            try values.encode(text, forKey: "text")
         }
     }
 
-    public struct Usage: Codable {
-        public var promptTokens: Int
-        public var completionTokens: Int
-        public var totalTokens: Int
-
-        public init(promptTokens: Int, completionTokens: Int, totalTokens: Int) {
-            self.promptTokens = promptTokens
-            self.completionTokens = completionTokens
-            self.totalTokens = totalTokens
-        }
-
-        public init(from decoder: Decoder) throws {
-            let values = try decoder.container(keyedBy: StringCodingKey.self)
-            self.promptTokens = try values.decode(Int.self, forKey: "prompt_tokens")
-            self.completionTokens = try values.decode(Int.self, forKey: "completion_tokens")
-            self.totalTokens = try values.decode(Int.self, forKey: "total_tokens")
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var values = encoder.container(keyedBy: StringCodingKey.self)
-            try values.encode(promptTokens, forKey: "prompt_tokens")
-            try values.encode(completionTokens, forKey: "completion_tokens")
-            try values.encode(totalTokens, forKey: "total_tokens")
-        }
+    /// The object type, which is always "text_completion"
+    public enum Object: String, Codable, CaseIterable {
+        case textCompletion = "text_completion"
     }
 
-    public init(id: String, object: String, created: Int, model: String, choices: [Choice], usage: Usage? = nil) {
+    public init(id: String, choices: [Choice], created: Int, model: String, systemFingerprint: String? = nil, object: Object, usage: CompletionUsage? = nil) {
         self.id = id
-        self.object = object
+        self.choices = choices
         self.created = created
         self.model = model
-        self.choices = choices
+        self.systemFingerprint = systemFingerprint
+        self.object = object
         self.usage = usage
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.id = try values.decode(String.self, forKey: "id")
-        self.object = try values.decode(String.self, forKey: "object")
+        self.choices = try values.decode([Choice].self, forKey: "choices")
         self.created = try values.decode(Int.self, forKey: "created")
         self.model = try values.decode(String.self, forKey: "model")
-        self.choices = try values.decode([Choice].self, forKey: "choices")
-        self.usage = try values.decodeIfPresent(Usage.self, forKey: "usage")
+        self.systemFingerprint = try values.decodeIfPresent(String.self, forKey: "system_fingerprint")
+        self.object = try values.decode(Object.self, forKey: "object")
+        self.usage = try values.decodeIfPresent(CompletionUsage.self, forKey: "usage")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(id, forKey: "id")
-        try values.encode(object, forKey: "object")
+        try values.encode(choices, forKey: "choices")
         try values.encode(created, forKey: "created")
         try values.encode(model, forKey: "model")
-        try values.encode(choices, forKey: "choices")
+        try values.encodeIfPresent(systemFingerprint, forKey: "system_fingerprint")
+        try values.encode(object, forKey: "object")
         try values.encodeIfPresent(usage, forKey: "usage")
     }
 }

@@ -5,21 +5,62 @@ import Foundation
 
 public struct CreateImageVariationRequest: Codable {
     /// The image to use as the basis for the variation(s). Must be a valid PNG file, less than 4MB, and square.
-    public var image: String
-    /// The number of images to generate. Must be between 1 and 10.
+    public var image: Data
+    /// The model to use for image generation. Only `dall-e-2` is supported at this time.
+    ///
+    /// Example: "dall-e-2"
+    public var model: Model?
+    /// The number of images to generate. Must be between 1 and 10. For `dall-e-3`, only `n=1` is supported.
     public var n: Int?
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
+    ///
+    /// Example: "url"
+    public var responseFormat: ResponseFormat?
     /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
     ///
     /// Example: "1024x1024"
     public var size: Size?
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
-    ///
-    /// Example: "url"
-    public var responseFormat: ResponseFormat?
-    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices/end-user-ids).
+    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices#end-user-ids).
     ///
     /// Example: "user-1234"
     public var user: String?
+
+    /// The model to use for image generation. Only `dall-e-2` is supported at this time.
+    ///
+    /// Example: "dall-e-2"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case dallE2 = "dall-e-2"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
+    }
+
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
+    ///
+    /// Example: "url"
+    public enum ResponseFormat: String, Codable, CaseIterable {
+        case url
+        case b64JSON = "b64_json"
+    }
 
     /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
     ///
@@ -30,37 +71,32 @@ public struct CreateImageVariationRequest: Codable {
         case _1024x1024 = "1024x1024"
     }
 
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
-    ///
-    /// Example: "url"
-    public enum ResponseFormat: String, Codable, CaseIterable {
-        case url
-        case b64JSON = "b64_json"
-    }
-
-    public init(image: String, n: Int? = nil, size: Size? = nil, responseFormat: ResponseFormat? = nil, user: String? = nil) {
+    public init(image: Data, model: Model? = nil, n: Int? = nil, responseFormat: ResponseFormat? = nil, size: Size? = nil, user: String? = nil) {
         self.image = image
+        self.model = model
         self.n = n
-        self.size = size
         self.responseFormat = responseFormat
+        self.size = size
         self.user = user
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.image = try values.decode(String.self, forKey: "image")
+        self.image = try values.decode(Data.self, forKey: "image")
+        self.model = try values.decodeIfPresent(Model.self, forKey: "model")
         self.n = try values.decodeIfPresent(Int.self, forKey: "n")
-        self.size = try values.decodeIfPresent(Size.self, forKey: "size")
         self.responseFormat = try values.decodeIfPresent(ResponseFormat.self, forKey: "response_format")
+        self.size = try values.decodeIfPresent(Size.self, forKey: "size")
         self.user = try values.decodeIfPresent(String.self, forKey: "user")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(image, forKey: "image")
+        try values.encodeIfPresent(model, forKey: "model")
         try values.encodeIfPresent(n, forKey: "n")
-        try values.encodeIfPresent(size, forKey: "size")
         try values.encodeIfPresent(responseFormat, forKey: "response_format")
+        try values.encodeIfPresent(size, forKey: "size")
         try values.encodeIfPresent(user, forKey: "user")
     }
 }

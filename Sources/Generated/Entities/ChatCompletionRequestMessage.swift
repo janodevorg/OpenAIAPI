@@ -3,38 +3,45 @@
 
 import Foundation
 
-public struct ChatCompletionRequestMessage: Codable {
-    /// The role of the author of this message.
-    public var role: Role
-    /// The contents of the message
-    public var content: String
-    /// The name of the user in a multi-user chat
-    public var name: String?
-
-    /// The role of the author of this message.
-    public enum Role: String, Codable, CaseIterable {
-        case system
-        case user
-        case assistant
-    }
-
-    public init(role: Role, content: String, name: String? = nil) {
-        self.role = role
-        self.content = content
-        self.name = name
-    }
+public enum ChatCompletionRequestMessage: Codable {
+    case chatCompletionRequestDeveloperMessage(ChatCompletionRequestDeveloperMessage)
+    case chatCompletionRequestSystemMessage(ChatCompletionRequestSystemMessage)
+    case chatCompletionRequestUserMessage(ChatCompletionRequestUserMessage)
+    case chatCompletionRequestAssistantMessage(ChatCompletionRequestAssistantMessage)
+    case chatCompletionRequestToolMessage(ChatCompletionRequestToolMessage)
+    case chatCompletionRequestFunctionMessage(ChatCompletionRequestFunctionMessage)
 
     public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.role = try values.decode(Role.self, forKey: "role")
-        self.content = try values.decode(String.self, forKey: "content")
-        self.name = try values.decodeIfPresent(String.self, forKey: "name")
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(ChatCompletionRequestDeveloperMessage.self) {
+            self = .chatCompletionRequestDeveloperMessage(value)
+        } else if let value = try? container.decode(ChatCompletionRequestSystemMessage.self) {
+            self = .chatCompletionRequestSystemMessage(value)
+        } else if let value = try? container.decode(ChatCompletionRequestUserMessage.self) {
+            self = .chatCompletionRequestUserMessage(value)
+        } else if let value = try? container.decode(ChatCompletionRequestAssistantMessage.self) {
+            self = .chatCompletionRequestAssistantMessage(value)
+        } else if let value = try? container.decode(ChatCompletionRequestToolMessage.self) {
+            self = .chatCompletionRequestToolMessage(value)
+        } else if let value = try? container.decode(ChatCompletionRequestFunctionMessage.self) {
+            self = .chatCompletionRequestFunctionMessage(value)
+        } else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Data could not be decoded as any of the expected types (ChatCompletionRequestDeveloperMessage, ChatCompletionRequestSystemMessage, ChatCompletionRequestUserMessage, ChatCompletionRequestAssistantMessage, ChatCompletionRequestToolMessage, ChatCompletionRequestFunctionMessage)."
+            )
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
-        var values = encoder.container(keyedBy: StringCodingKey.self)
-        try values.encode(role, forKey: "role")
-        try values.encode(content, forKey: "content")
-        try values.encodeIfPresent(name, forKey: "name")
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .chatCompletionRequestDeveloperMessage(let value): try container.encode(value)
+        case .chatCompletionRequestSystemMessage(let value): try container.encode(value)
+        case .chatCompletionRequestUserMessage(let value): try container.encode(value)
+        case .chatCompletionRequestAssistantMessage(let value): try container.encode(value)
+        case .chatCompletionRequestToolMessage(let value): try container.encode(value)
+        case .chatCompletionRequestFunctionMessage(let value): try container.encode(value)
+        }
     }
 }

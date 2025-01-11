@@ -3,6 +3,7 @@
 
 import Foundation
 import Get
+import HTTPHeaders
 import URLQueryEncoder
 
 extension Paths {
@@ -16,7 +17,7 @@ extension Paths {
 
         /// Creates an embedding vector representing the input text.
         public func post(_ body: OpenAIAPI.CreateEmbeddingRequest) -> Request<OpenAIAPI.CreateEmbeddingResponse> {
-            Request(method: "POST", url: path, body: body, id: "createEmbedding")
+            Request(path: path, method: "POST", body: body, id: "createEmbedding")
         }
     }
 }

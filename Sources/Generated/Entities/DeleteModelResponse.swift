@@ -5,26 +5,26 @@ import Foundation
 
 public struct DeleteModelResponse: Codable {
     public var id: String
-    public var object: String
     public var isDeleted: Bool
+    public var object: String
 
-    public init(id: String, object: String, isDeleted: Bool) {
+    public init(id: String, isDeleted: Bool, object: String) {
         self.id = id
-        self.object = object
         self.isDeleted = isDeleted
+        self.object = object
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.id = try values.decode(String.self, forKey: "id")
-        self.object = try values.decode(String.self, forKey: "object")
         self.isDeleted = try values.decode(Bool.self, forKey: "deleted")
+        self.object = try values.decode(String.self, forKey: "object")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(id, forKey: "id")
-        try values.encode(object, forKey: "object")
         try values.encode(isDeleted, forKey: "deleted")
+        try values.encode(object, forKey: "object")
     }
 }

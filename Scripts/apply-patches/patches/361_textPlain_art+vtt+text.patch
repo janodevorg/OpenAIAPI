@@ -1,0 +1,13 @@
+# https://github.com/openai/openai-openapi/issues/361
+--- openapi.current.yaml	2025-01-09 03:47:59
++++ openapi.patched.yaml	2025-01-09 03:48:57
+@@ -694,6 +694,9 @@
+                 oneOf:
+                   - $ref: "#/components/schemas/CreateTranscriptionResponseJson"
+                   - $ref: "#/components/schemas/CreateTranscriptionResponseVerboseJson"
++            text/plain:
++              schema:
++                type: string
+       x-oaiMeta:
+         name: Create transcription
+         group: audio

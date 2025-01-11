@@ -5,27 +5,60 @@ import Foundation
 
 public struct CreateImageEditRequest: Codable {
     /// The image to edit. Must be a valid PNG file, less than 4MB, and square. If mask is not provided, image must have transparency, which will be used as the mask.
-    public var image: String
-    /// An additional image whose fully transparent areas (e.g. where alpha is zero) indicate where `image` should be edited. Must be a valid PNG file, less than 4MB, and have the same dimensions as `image`.
-    public var mask: String?
+    public var image: Data
     /// A text description of the desired image(s). The maximum length is 1000 characters.
     ///
     /// Example: "A cute baby sea otter wearing a beret"
     public var prompt: String
+    /// An additional image whose fully transparent areas (e.g. where alpha is zero) indicate where `image` should be edited. Must be a valid PNG file, less than 4MB, and have the same dimensions as `image`.
+    public var mask: Data?
+    /// The model to use for image generation. Only `dall-e-2` is supported at this time.
+    ///
+    /// Example: "dall-e-2"
+    public var model: Model?
     /// The number of images to generate. Must be between 1 and 10.
     public var n: Int?
     /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
     ///
     /// Example: "1024x1024"
     public var size: Size?
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
     ///
     /// Example: "url"
     public var responseFormat: ResponseFormat?
-    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices/end-user-ids).
+    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices#end-user-ids).
     ///
     /// Example: "user-1234"
     public var user: String?
+
+    /// The model to use for image generation. Only `dall-e-2` is supported at this time.
+    ///
+    /// Example: "dall-e-2"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case dallE2 = "dall-e-2"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
+    }
 
     /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024`.
     ///
@@ -36,7 +69,7 @@ public struct CreateImageEditRequest: Codable {
         case _1024x1024 = "1024x1024"
     }
 
-    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
+    /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
     ///
     /// Example: "url"
     public enum ResponseFormat: String, Codable, CaseIterable {
@@ -44,10 +77,11 @@ public struct CreateImageEditRequest: Codable {
         case b64JSON = "b64_json"
     }
 
-    public init(image: String, mask: String? = nil, prompt: String, n: Int? = nil, size: Size? = nil, responseFormat: ResponseFormat? = nil, user: String? = nil) {
+    public init(image: Data, prompt: String, mask: Data? = nil, model: Model? = nil, n: Int? = nil, size: Size? = nil, responseFormat: ResponseFormat? = nil, user: String? = nil) {
         self.image = image
-        self.mask = mask
         self.prompt = prompt
+        self.mask = mask
+        self.model = model
         self.n = n
         self.size = size
         self.responseFormat = responseFormat
@@ -56,9 +90,10 @@ public struct CreateImageEditRequest: Codable {
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.image = try values.decode(String.self, forKey: "image")
-        self.mask = try values.decodeIfPresent(String.self, forKey: "mask")
+        self.image = try values.decode(Data.self, forKey: "image")
         self.prompt = try values.decode(String.self, forKey: "prompt")
+        self.mask = try values.decodeIfPresent(Data.self, forKey: "mask")
+        self.model = try values.decodeIfPresent(Model.self, forKey: "model")
         self.n = try values.decodeIfPresent(Int.self, forKey: "n")
         self.size = try values.decodeIfPresent(Size.self, forKey: "size")
         self.responseFormat = try values.decodeIfPresent(ResponseFormat.self, forKey: "response_format")
@@ -68,8 +103,9 @@ public struct CreateImageEditRequest: Codable {
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(image, forKey: "image")
-        try values.encodeIfPresent(mask, forKey: "mask")
         try values.encode(prompt, forKey: "prompt")
+        try values.encodeIfPresent(mask, forKey: "mask")
+        try values.encodeIfPresent(model, forKey: "model")
         try values.encodeIfPresent(n, forKey: "n")
         try values.encodeIfPresent(size, forKey: "size")
         try values.encodeIfPresent(responseFormat, forKey: "response_format")

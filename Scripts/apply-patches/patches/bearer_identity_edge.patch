@@ -1,0 +1,20 @@
+--- openapi.current.yaml	2025-01-09 03:47:59
++++ openapi.patched.yaml	2025-01-09 04:05:48
+@@ -25661,8 +25661,17 @@
+           }
+   securitySchemes:
+     ApiKeyAuth:
++      type: http
++      scheme: bearer
++    bearer_identity_edge:
+       type: http
+       scheme: bearer
++      bearerFormat: JWT
++      description: Bearer authentication using identity edge token
++    basic_identity_edge:
++      type: http
++      scheme: basic
++      description: Basic authentication using identity edge credentials
+ security:
+   - ApiKeyAuth: []
+ x-oaiMeta:

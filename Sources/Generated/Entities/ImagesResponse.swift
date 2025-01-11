@@ -5,31 +5,9 @@ import Foundation
 
 public struct ImagesResponse: Codable {
     public var created: Int
-    public var data: [Datum]
+    public var data: [Image]
 
-    public struct Datum: Codable {
-        public var url: String?
-        public var b64JSON: String?
-
-        public init(url: String? = nil, b64JSON: String? = nil) {
-            self.url = url
-            self.b64JSON = b64JSON
-        }
-
-        public init(from decoder: Decoder) throws {
-            let values = try decoder.container(keyedBy: StringCodingKey.self)
-            self.url = try values.decodeIfPresent(String.self, forKey: "url")
-            self.b64JSON = try values.decodeIfPresent(String.self, forKey: "b64_json")
-        }
-
-        public func encode(to encoder: Encoder) throws {
-            var values = encoder.container(keyedBy: StringCodingKey.self)
-            try values.encodeIfPresent(url, forKey: "url")
-            try values.encodeIfPresent(b64JSON, forKey: "b64_json")
-        }
-    }
-
-    public init(created: Int, data: [Datum]) {
+    public init(created: Int, data: [Image]) {
         self.created = created
         self.data = data
     }
@@ -37,7 +15,7 @@ public struct ImagesResponse: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.created = try values.decode(Int.self, forKey: "created")
-        self.data = try values.decode([Datum].self, forKey: "data")
+        self.data = try values.decode([Image].self, forKey: "data")
     }
 
     public func encode(to encoder: Encoder) throws {

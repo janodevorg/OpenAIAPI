@@ -1,14 +1,14 @@
 #!/bin/bash -e -o pipefail
 
-generate: createapi
-	rm -rf Sources/Generated || true
+generate: createapi requirewget
+	rm -rf Sources/Generated || true 
+	create-api generate openapi.yaml --config-option "module=OpenAIAPI"
+	mv CreateAPI/Sources Sources/Generated
+	rm -rf CreateAPI || true
+
+refresh: requirewget
 	rm openapi.yaml || true
 	wget https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
-	create-api generate openapi.yaml --config-option "module=OpenAIAPI"
-	mkdir -p Sources/Generated
-	mv CreateAPI/Sources/* Sources/Generated
-	rm -rf CreateAPI || true
-	patch Sources/Generated/Entities/FineTune.swift FineTune.patch
 
 docc: requirejq
 	rm -rf docs
@@ -39,6 +39,9 @@ createapi: requirebrew
 
 requirebrew:
 	@if ! command -v brew &> /dev/null; then echo "Please install brew from https://brew.sh/"; exit 1; fi
+
+requirewget:
+	@if ! command -v brew &> /dev/null; then echo "Please install wget using 'brew install wget'"; exit 1; fi
 
 requirejq:
 	@if ! command -v jq &> /dev/null; then echo "Please install jq using 'brew install jq'"; exit 1; fi

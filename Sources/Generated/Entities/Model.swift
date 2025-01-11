@@ -3,32 +3,42 @@
 
 import Foundation
 
+/// Describes an OpenAI model offering that can be used with the API.
 public struct Model: Codable {
+    /// The model identifier, which can be referenced in the API endpoints.
     public var id: String
-    public var object: String
+    /// The Unix timestamp (in seconds) when the model was created.
     public var created: Int
+    /// The object type, which is always "model".
+    public var object: Object
+    /// The organization that owns the model.
     public var ownedBy: String
 
-    public init(id: String, object: String, created: Int, ownedBy: String) {
+    /// The object type, which is always "model".
+    public enum Object: String, Codable, CaseIterable {
+        case model
+    }
+
+    public init(id: String, created: Int, object: Object, ownedBy: String) {
         self.id = id
-        self.object = object
         self.created = created
+        self.object = object
         self.ownedBy = ownedBy
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
         self.id = try values.decode(String.self, forKey: "id")
-        self.object = try values.decode(String.self, forKey: "object")
         self.created = try values.decode(Int.self, forKey: "created")
+        self.object = try values.decode(Object.self, forKey: "object")
         self.ownedBy = try values.decode(String.self, forKey: "owned_by")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
         try values.encode(id, forKey: "id")
-        try values.encode(object, forKey: "object")
         try values.encode(created, forKey: "created")
+        try values.encode(object, forKey: "object")
         try values.encode(ownedBy, forKey: "owned_by")
     }
 }

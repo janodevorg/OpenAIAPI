@@ -4,18 +4,26 @@
 import Foundation
 
 public struct CreateEmbeddingRequest: Codable {
-    /// ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.
-    public var model: String
-    /// Input text to get embeddings for, encoded as a string or array of tokens. To get embeddings for multiple inputs in a single request, pass an array of strings or array of token arrays. Each input must not exceed 8192 tokens in length.
+    /// Input text to embed, encoded as a string or array of tokens. To embed multiple inputs in a single request, pass an array of strings or array of token arrays. The input must not exceed the max input tokens for the model (8192 tokens for `text-embedding-ada-002`), cannot be an empty string, and any array must be 2048 dimensions or less. [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for counting tokens.
     ///
     /// Example: "The quick brown fox jumped over the lazy dog"
     public var input: Input
-    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices/end-user-ids).
+    /// ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models) for descriptions of them.
+    ///
+    /// Example: "text-embedding-3-small"
+    public var model: Model
+    /// The format to return the embeddings in. Can be either `float` or [`base64`](https://pypi.org/project/pybase64/).
+    ///
+    /// Example: "float"
+    public var encodingFormat: EncodingFormat?
+    /// The number of dimensions the resulting output embeddings should have. Only supported in `text-embedding-3` and later models.
+    public var dimensions: Int?
+    /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. [Learn more](/docs/guides/safety-best-practices#end-user-ids).
     ///
     /// Example: "user-1234"
     public var user: String?
 
-    /// Input text to get embeddings for, encoded as a string or array of tokens. To get embeddings for multiple inputs in a single request, pass an array of strings or array of token arrays. Each input must not exceed 8192 tokens in length.
+    /// Input text to embed, encoded as a string or array of tokens. To embed multiple inputs in a single request, pass an array of strings or array of token arrays. The input must not exceed the max input tokens for the model (8192 tokens for `text-embedding-ada-002`), cannot be an empty string, and any array must be 2048 dimensions or less. [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for counting tokens.
     ///
     /// Example: "The quick brown fox jumped over the lazy dog"
     public enum Input: Codable {
@@ -53,23 +61,68 @@ public struct CreateEmbeddingRequest: Codable {
         }
     }
 
-    public init(model: String, input: Input, user: String? = nil) {
-        self.model = model
+    /// ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models) for descriptions of them.
+    ///
+    /// Example: "text-embedding-3-small"
+    public struct Model: Codable {
+        public var string: String?
+        public var object: Object?
+
+        public enum Object: String, Codable, CaseIterable {
+            case textEmbeddingAda002 = "text-embedding-ada-002"
+            case textEmbedding3Small = "text-embedding-3-small"
+            case textEmbedding3Large = "text-embedding-3-large"
+        }
+
+        public init(string: String? = nil, object: Object? = nil) {
+            self.string = string
+            self.object = object
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            self.string = try? container.decode(String.self)
+            self.object = try? container.decode(Object.self)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            if let value = string { try container.encode(value) }
+            if let value = object { try container.encode(value) }
+        }
+    }
+
+    /// The format to return the embeddings in. Can be either `float` or [`base64`](https://pypi.org/project/pybase64/).
+    ///
+    /// Example: "float"
+    public enum EncodingFormat: String, Codable, CaseIterable {
+        case float
+        case base64
+    }
+
+    public init(input: Input, model: Model, encodingFormat: EncodingFormat? = nil, dimensions: Int? = nil, user: String? = nil) {
         self.input = input
+        self.model = model
+        self.encodingFormat = encodingFormat
+        self.dimensions = dimensions
         self.user = user
     }
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: StringCodingKey.self)
-        self.model = try values.decode(String.self, forKey: "model")
         self.input = try values.decode(Input.self, forKey: "input")
+        self.model = try values.decode(Model.self, forKey: "model")
+        self.encodingFormat = try values.decodeIfPresent(EncodingFormat.self, forKey: "encoding_format")
+        self.dimensions = try values.decodeIfPresent(Int.self, forKey: "dimensions")
         self.user = try values.decodeIfPresent(String.self, forKey: "user")
     }
 
     public func encode(to encoder: Encoder) throws {
         var values = encoder.container(keyedBy: StringCodingKey.self)
-        try values.encode(model, forKey: "model")
         try values.encode(input, forKey: "input")
+        try values.encode(model, forKey: "model")
+        try values.encodeIfPresent(encodingFormat, forKey: "encoding_format")
+        try values.encodeIfPresent(dimensions, forKey: "dimensions")
         try values.encodeIfPresent(user, forKey: "user")
     }
 }
