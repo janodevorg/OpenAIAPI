@@ -1,3 +1,5 @@
+Only 1.0.0 works. The generated code stopped compiling. Better use AIProxy.
+
 [![Swift](https://github.com/janodevorg/OpenAIAPI/actions/workflows/swift.yml/badge.svg)](https://github.com/janodevorg/OpenAIAPI/actions/workflows/swift.yml) [![MIT license](http://img.shields.io/badge/license-MIT-lightgrey.svg)](http://opensource.org/licenses/MIT)
 
 # OpenAIAPI
